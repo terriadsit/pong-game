@@ -1,38 +1,22 @@
-const server = require('http').createServer();
+// server is running express and socket.io side by side
+const http = require('http');
+const io = require('socket.io');
 
-const io = require('socket.io')(server, {
+
+const apiServer = require('./api'); // the express handler
+const httpServer = http.createServer(apiServer);
+const socketServer = io(httpServer, {
     cors: {
       origin: '*',
       methods: ['GET', 'POST']
     }
   });
 
-const PORT = 3000;
+const sockets = require('./sockets');
 
-server.listen(PORT);
+const PORT = 3000;
+httpServer.listen(PORT);
 console.log(`listening on port ${PORT}`);
 
-let readyPlayerCount = 0;
+sockets.listen(socketServer);
 
-io.on('connection', (socket) => {
-    console.log('a user connected', socket.id);
-
-    socket.on('ready', () => {
-        console.log('player ready', socket.id);
-        readyPlayerCount++;
-        console.log('playercount', readyPlayerCount);
-        if (readyPlayerCount === 2) {
-            io.emit('startGame', socket.id); // 2nd player will be referee, track ball
-        }
-
-    })
-
-    socket.on('paddleMove', (paddleData) => {
-        socket.broadcast.emit('paddleMove', paddleData);// forward to other player paddlePosition
-    })
-
-    socket.on('ballMove', (ballData) => {
-        //console.log('balldata', ballData)
-        socket.broadcast.emit('ballMove', ballData);  // send to none referee player
-    })
-});
