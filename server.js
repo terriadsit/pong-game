@@ -22,8 +22,17 @@ io.on('connection', (socket) => {
         readyPlayerCount++;
         console.log('playercount', readyPlayerCount);
         if (readyPlayerCount === 2) {
-            io.emit('startGame', socket.id); // 2nd player will be referee
+            io.emit('startGame', socket.id); // 2nd player will be referee, track ball
         }
 
+    })
+
+    socket.on('paddleMove', (paddleData) => {
+        socket.broadcast.emit('paddleMove', paddleData);// forward to other player paddlePosition
+    })
+
+    socket.on('ballMove', (ballData) => {
+        //console.log('balldata', ballData)
+        socket.broadcast.emit('ballMove', ballData);  // send to none referee player
     })
 });
